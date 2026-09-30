@@ -11,12 +11,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/blueprints")
@@ -25,9 +27,11 @@ import java.util.Set;
 public class BlueprintController {
 
     private final BlueprintsServices services;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public BlueprintController(BlueprintsServices services) {
+    public BlueprintController(BlueprintsServices services, SimpMessagingTemplate messagingTemplate) {
         this.services = services;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Operation(summary = "Lista todos los blueprints", description = "Requiere el scope blueprints.read")
@@ -124,6 +128,7 @@ public class BlueprintController {
     public void update(@PathVariable String author, @PathVariable String name, @RequestBody List<Point> points) {
         try {
             services.updateBlueprint(author, name, points);
+            broadcast(author, name, "UPDATE", points);
         } catch (BlueprintNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
@@ -140,9 +145,15 @@ public class BlueprintController {
     public void delete(@PathVariable String author, @PathVariable String name) {
         try {
             services.deleteBlueprint(author, name);
+            broadcast(author, name, "DELETE", null);
         } catch (BlueprintNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
+    }
+
+    private void broadcast(String author, String name, String type, List<Point> points) {
+        String topic = "/topic/blueprints.%s.%s".formatted(author, name);
+        messagingTemplate.convertAndSend(topic, Map.of("type", type, "points", points == null ? List.of() : points));
     }
 
     // ----------------------------------------------------------------------------------------

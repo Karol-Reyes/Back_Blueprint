@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -109,4 +110,40 @@ public class BlueprintController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
+
+    // NUEVOS
+
+    @Operation(summary = "Actualiza los puntos de un blueprint", description = "Requiere el scope blueprints.write")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Blueprint actualizado"),
+        @ApiResponse(responseCode = "403", description = "Token sin el scope blueprints.write"),
+        @ApiResponse(responseCode = "404", description = "Blueprint no encontrado")
+    })
+    @PutMapping("/{author}/{name}")
+    @PreAuthorize("hasAuthority('SCOPE_blueprints.write')")
+    public void update(@PathVariable String author, @PathVariable String name, @RequestBody List<Point> points) {
+        try {
+            services.updateBlueprint(author, name, points);
+        } catch (BlueprintNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Elimina un blueprint", description = "Requiere el scope blueprints.write")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Blueprint eliminado"),
+        @ApiResponse(responseCode = "403", description = "Token sin el scope blueprints.write"),
+        @ApiResponse(responseCode = "404", description = "Blueprint no encontrado")
+    })
+    @DeleteMapping("/{author}/{name}")
+    @PreAuthorize("hasAuthority('SCOPE_blueprints.write')")
+    public void delete(@PathVariable String author, @PathVariable String name) {
+        try {
+            services.deleteBlueprint(author, name);
+        } catch (BlueprintNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
+    }
+
+    // ----------------------------------------------------------------------------------------
 }

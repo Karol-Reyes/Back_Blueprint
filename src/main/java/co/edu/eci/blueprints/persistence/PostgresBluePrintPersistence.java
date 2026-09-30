@@ -79,6 +79,27 @@ public class PostgresBluePrintPersistence implements BlueprintPersistence {
                 pointsToText(bp.getPoints()), author, name);
     }
 
+    // NUEVOS
+
+    @Override 
+    public void updateBlueprint(String author, String name, List<Point> points) throws BlueprintNotFoundException {
+        if (!exists(author, name)) {
+            throw new BlueprintNotFoundException("Blueprint not found: %s/%s".formatted(author, name));
+        }
+        jdbc.update("UPDATE blueprints SET points = ? WHERE author = ? AND name = ?",
+                pointsToText(points), author, name);
+    }
+
+    @Override 
+    public void deleteBlueprint(String author, String name) throws BlueprintNotFoundException {
+        int rows = jdbc.update("DELETE FROM blueprints WHERE author = ? AND name = ?", author, name);
+        if (rows == 0) {
+            throw new BlueprintNotFoundException("Blueprint not found: %s/%s".formatted(author, name));
+        }
+    }
+
+    // ----------------------------------------------------------------------------------------------
+
     private String keyOf(Blueprint bp) { return bp.getAuthor() + ":" + bp.getName(); }
 
     private boolean exists(String author, String name) {

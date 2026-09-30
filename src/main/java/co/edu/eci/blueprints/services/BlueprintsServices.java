@@ -39,4 +39,16 @@ public class BlueprintsServices {
     public void addPoint(String author, String name, int x, int y) throws BlueprintNotFoundException {
         persistence.addPoint(author, name, x, y);
     }
+
+    // NUEVOS
+
+    public void updateBlueprint(String author, String name, java.util.List<co.edu.eci.blueprints.model.Point> points) throws BlueprintNotFoundException {
+        persistence.updateBlueprint(author, name, points);
+    }
+
+    public void deleteBlueprint(String author, String name) throws BlueprintNotFoundException {
+        persistence.deleteBlueprint(author, name);
+    }
+
+    // ----------------------------------------------------------------------------------------
 }
